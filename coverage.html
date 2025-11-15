@@ -1,0 +1,618 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>logsreceiver: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/open-telemetry/opentelemetry-collector-contrib/receiver/logsreceiver/config.go (94.7%)</option>
+				
+				<option value="file1">github.com/open-telemetry/opentelemetry-collector-contrib/receiver/logsreceiver/factory.go (85.7%)</option>
+				
+				<option value="file2">github.com/open-telemetry/opentelemetry-collector-contrib/receiver/logsreceiver/receiver.go (91.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package logsreceiver
+
+import (
+        "errors"
+        "fmt"
+        "net/url"
+        "time"
+)
+
+// Predefined error responses for configuration validation failures
+var (
+        errInvalidEndpoint = errors.New(`"endpoint" must be in the form of &lt;scheme&gt;://&lt;hostname&gt;[:&lt;port&gt;]`)
+        errMissingEndpoint = errors.New("endpoint must be specified")
+)
+
+type Config struct {
+        CollectionInterval time.Duration `mapstructure:"collection_interval"`
+
+        Targets []*targetConfig `mapstructure:"targets"`
+
+        _ struct{}
+}
+
+type targetConfig struct {
+        Endpoint string `mapstructure:"endpoint"`
+
+        Method string `mapstructure:"method"`
+
+        Body string `mapstructure:"body"`
+
+        Headers map[string]string `mapstructure:"headers"`
+
+        // Service name to assign to logs
+        ServiceName string `mapstructure:"service_name"`
+
+        // Log level to assign to logs
+        LogLevel string `mapstructure:"log_level"`
+
+        // Additional attributes to add to each log record
+        Labels map[string]string `mapstructure:"labels"`
+}
+
+func (cfg *targetConfig) Validate() error <span class="cov10" title="6">{
+        if cfg.Endpoint == "" </span><span class="cov1" title="1">{
+                return errMissingEndpoint
+        }</span>
+
+        <span class="cov9" title="5">if _, parseErr := url.ParseRequestURI(cfg.Endpoint); parseErr != nil </span><span class="cov4" title="2">{
+                return fmt.Errorf("%s: %w", errInvalidEndpoint.Error(), parseErr)
+        }</span>
+
+        <span class="cov6" title="3">if cfg.Method == "" </span><span class="cov1" title="1">{
+                cfg.Method = "GET"
+        }</span>
+
+        <span class="cov6" title="3">if cfg.ServiceName == "" </span><span class="cov4" title="2">{
+                cfg.ServiceName = "logs-receiver"
+        }</span>
+
+        <span class="cov6" title="3">if cfg.LogLevel == "" </span><span class="cov4" title="2">{
+                cfg.LogLevel = "info"
+        }</span>
+
+        <span class="cov6" title="3">return nil</span>
+}
+
+func (cfg *Config) Validate() error <span class="cov6" title="3">{
+        if len(cfg.Targets) == 0 </span><span class="cov1" title="1">{
+                return errors.New("no targets configured")
+        }</span>
+
+        <span class="cov4" title="2">if cfg.CollectionInterval &lt;= 0 </span><span class="cov0" title="0">{
+                cfg.CollectionInterval = 30 * time.Second
+        }</span>
+
+        <span class="cov4" title="2">for _, target := range cfg.Targets </span><span class="cov4" title="2">{
+                if err := target.Validate(); err != nil </span><span class="cov1" title="1">{
+                        return err
+                }</span>
+        }
+
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package logsreceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/logsreceiver"
+
+import (
+        "context"
+        "errors"
+        "time"
+
+        "go.opentelemetry.io/collector/component"
+        "go.opentelemetry.io/collector/consumer"
+        "go.opentelemetry.io/collector/receiver"
+)
+
+const (
+        // typeStr is the value of the "type" key in configuration.
+        typeStr = "logsreceiver"
+
+        // stability is the current stability level of the component.
+        stability = component.StabilityLevelAlpha
+)
+
+var errConfigNotLogsReceiver = errors.New("config was not a logs receiver config")
+
+// NewFactory creates a new logs receiver factory.
+func NewFactory() receiver.Factory <span class="cov10" title="2">{
+        return receiver.NewFactory(
+                component.MustNewType(typeStr),
+                createDefaultConfig,
+                receiver.WithLogs(createLogsReceiver, stability))
+}</span>
+
+// createDefaultConfig creates the default configuration for the logs receiver.
+func createDefaultConfig() component.Config <span class="cov10" title="2">{
+        return &amp;Config{
+                CollectionInterval: 30 * time.Second,
+                Targets:            []*targetConfig{},
+        }
+}</span>
+
+// createLogsReceiver creates a logs receiver based on provided config.
+func createLogsReceiver(_ context.Context, params receiver.Settings, rConf component.Config, consumer consumer.Logs) (receiver.Logs, error) <span class="cov1" title="1">{
+        cfg, ok := rConf.(*Config)
+        if !ok </span><span class="cov0" title="0">{
+                return nil, errConfigNotLogsReceiver
+        }</span>
+
+        <span class="cov1" title="1">logsReceiver := newLogsReceiver(cfg, params, consumer)
+        return logsReceiver, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package logsreceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/logsreceiver"
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "io"
+        "net/http"
+        "strings"
+        "sync"
+        "time"
+
+        "go.opentelemetry.io/collector/component"
+        "go.opentelemetry.io/collector/consumer"
+        "go.opentelemetry.io/collector/pdata/pcommon"
+        "go.opentelemetry.io/collector/pdata/plog"
+        "go.opentelemetry.io/collector/receiver"
+        "go.uber.org/zap"
+)
+
+// logsReceiver implements the logs receiver interface.
+type logsReceiver struct {
+        config   *Config
+        settings receiver.Settings
+        consumer consumer.Logs
+        logger   *zap.Logger
+        cancel   context.CancelFunc
+        done     chan struct{}
+}
+
+// newLogsReceiver creates a new logs receiver.
+func newLogsReceiver(config *Config, settings receiver.Settings, consumer consumer.Logs) *logsReceiver <span class="cov7" title="12">{
+        return &amp;logsReceiver{
+                config:   config,
+                settings: settings,
+                consumer: consumer,
+                logger:   settings.Logger,
+                done:     make(chan struct{}),
+        }
+}</span>
+
+// Start starts the logs receiver.
+func (r *logsReceiver) Start(ctx context.Context, _ component.Host) error <span class="cov4" title="3">{
+        ctx, r.cancel = context.WithCancel(ctx)
+
+        go r.poll(ctx)
+
+        r.logger.Info("Logs receiver started",
+                zap.Duration("collection_interval", r.config.CollectionInterval),
+                zap.Int("targets", len(r.config.Targets)))
+
+        return nil
+}</span>
+
+// Shutdown stops the logs receiver.
+func (r *logsReceiver) Shutdown(_ context.Context) error <span class="cov4" title="3">{
+        if r.cancel != nil </span><span class="cov4" title="3">{
+                r.cancel()
+        }</span>
+
+        <span class="cov4" title="3">&lt;-r.done
+        r.logger.Info("Logs receiver stopped")
+        return nil</span>
+}
+
+// poll continuously polls the configured endpoints for logs.
+func (r *logsReceiver) poll(ctx context.Context) <span class="cov4" title="3">{
+        defer close(r.done)
+
+        ticker := time.NewTicker(r.config.CollectionInterval)
+        defer ticker.Stop()
+
+        // Poll immediately on start
+        r.pollTargets(ctx)
+
+        for </span><span class="cov4" title="4">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov4" title="3">
+                        return</span>
+                case &lt;-ticker.C:<span class="cov1" title="1">
+                        r.pollTargets(ctx)</span>
+                }
+        }
+}
+
+// pollTargets polls all configured targets.
+func (r *logsReceiver) pollTargets(ctx context.Context) <span class="cov4" title="4">{
+        var wg sync.WaitGroup
+
+        for _, target := range r.config.Targets </span><span class="cov4" title="4">{
+                wg.Add(1)
+                go func(target *targetConfig) </span><span class="cov4" title="4">{
+                        defer wg.Done()
+                        if err := r.pollTarget(ctx, target); err != nil </span><span class="cov1" title="1">{
+                                r.logger.Error("Failed to poll target",
+                                        zap.String("endpoint", target.Endpoint),
+                                        zap.Error(err))
+                        }</span>
+                }(target)
+        }
+
+        <span class="cov4" title="4">wg.Wait()</span>
+}
+
+// pollTarget polls a single target endpoint.
+func (r *logsReceiver) pollTarget(ctx context.Context, target *targetConfig) error <span class="cov6" title="8">{
+        req, err := r.createRequest(ctx, target)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create request: %w", err)
+        }</span>
+
+        <span class="cov6" title="8">client := &amp;http.Client{
+                Timeout: 30 * time.Second,
+        }
+
+        resp, err := client.Do(req)
+        if err != nil </span><span class="cov1" title="1">{
+                return fmt.Errorf("failed to execute request: %w", err)
+        }</span>
+        <span class="cov6" title="7">defer resp.Body.Close()
+
+        if resp.StatusCode &gt;= 400 </span><span class="cov1" title="1">{
+                return fmt.Errorf("HTTP error: %d %s", resp.StatusCode, resp.Status)
+        }</span>
+
+        <span class="cov5" title="6">body, err := io.ReadAll(resp.Body)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to read response body: %w", err)
+        }</span>
+
+        <span class="cov5" title="6">logs, err := r.parseLogs(resp, body, target)
+        if err != nil </span><span class="cov1" title="1">{
+                return fmt.Errorf("failed to parse logs: %w", err)
+        }</span>
+
+        <span class="cov5" title="5">if logs.LogRecordCount() &gt; 0 </span><span class="cov5" title="5">{
+                if err := r.consumer.ConsumeLogs(ctx, logs); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to consume logs: %w", err)
+                }</span>
+
+                <span class="cov5" title="5">r.logger.Debug("Successfully consumed logs",
+                        zap.String("endpoint", target.Endpoint),
+                        zap.Int("log_count", logs.LogRecordCount()))</span>
+        }
+
+        <span class="cov5" title="5">return nil</span>
+}
+
+// createRequest creates an HTTP request for the target.
+func (r *logsReceiver) createRequest(ctx context.Context, target *targetConfig) (*http.Request, error) <span class="cov7" title="10">{
+        var body io.Reader
+        if target.Body != "" </span><span class="cov2" title="2">{
+                body = strings.NewReader(target.Body)
+        }</span>
+
+        <span class="cov7" title="10">req, err := http.NewRequestWithContext(ctx, target.Method, target.Endpoint, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Set headers
+        <span class="cov7" title="10">for key, value := range target.Headers </span><span class="cov0" title="0">{
+                req.Header.Set(key, value)
+        }</span>
+
+        // Set default Content-Type for POST/PUT with body
+        <span class="cov7" title="10">if target.Body != "" &amp;&amp; req.Header.Get("Content-Type") == "" </span><span class="cov2" title="2">{
+                if strings.HasPrefix(strings.TrimSpace(target.Body), "{") </span><span class="cov1" title="1">{
+                        req.Header.Set("Content-Type", "application/json")
+                }</span> else<span class="cov1" title="1"> {
+                        req.Header.Set("Content-Type", "text/plain")
+                }</span>
+        }
+
+        <span class="cov7" title="10">return req, nil</span>
+}
+
+// parseLogs parses the response body into log records.
+func (r *logsReceiver) parseLogs(resp *http.Response, body []byte, target *targetConfig) (plog.Logs, error) <span class="cov5" title="6">{
+        logs := plog.NewLogs()
+
+        ct := strings.ToLower(resp.Header.Get("Content-Type"))
+        switch </span>{
+        case strings.Contains(ct, "application/json"):<span class="cov4" title="4">
+                return r.parseJSONLogs(body, target, logs)</span>
+        case strings.Contains(ct, "text"):<span class="cov1" title="1">
+                return r.parseTextLogs(body, target, logs)</span>
+        default:<span class="cov1" title="1">
+                return r.parseTextLogs(body, target, logs)</span>
+        }
+}
+
+// parseJSONLogs parses JSON formatted logs.
+func (r *logsReceiver) parseJSONLogs(body []byte, target *targetConfig, logs plog.Logs) (plog.Logs, error) <span class="cov4" title="4">{
+        var jsonData interface{}
+        if err := json.Unmarshal(body, &amp;jsonData); err != nil </span><span class="cov1" title="1">{
+                return plog.Logs{}, fmt.Errorf("failed to unmarshal JSON: %w", err)
+
+        }</span>
+
+        <span class="cov4" title="3">resourceLogs := logs.ResourceLogs().AppendEmpty()
+        resource := resourceLogs.Resource()
+
+        resource.Attributes().PutStr("endpoint", target.Endpoint)
+        resource.Attributes().PutStr("service.name", target.ServiceName)
+
+        scopeLogs := resourceLogs.ScopeLogs().AppendEmpty()
+
+        r.addLogRecord(scopeLogs, jsonData, target)
+
+        return logs, nil</span>
+}
+
+// parseTextLogs parses text formatted logs.
+func (r *logsReceiver) parseTextLogs(body []byte, target *targetConfig, logs plog.Logs) (plog.Logs, error) <span class="cov2" title="2">{
+        resourceLogs := logs.ResourceLogs().AppendEmpty()
+        resource := resourceLogs.Resource()
+
+        // Set resource attributes
+        resource.Attributes().PutStr("service.name", target.ServiceName)
+        resource.Attributes().PutStr("endpoint", target.Endpoint)
+
+        // Add custom attributes
+        for key, value := range target.Labels </span><span class="cov0" title="0">{
+                resource.Attributes().PutStr(key, value)
+        }</span>
+
+        <span class="cov2" title="2">scopeLogs := resourceLogs.ScopeLogs().AppendEmpty()
+
+        // Split text into lines and create log records
+        lines := strings.Split(string(body), "\n")
+        for _, line := range lines </span><span class="cov5" title="6">{
+                line = strings.TrimSpace(line)
+                if line == "" </span><span class="cov1" title="1">{
+                        continue</span>
+                }
+
+                <span class="cov5" title="5">logRecord := scopeLogs.LogRecords().AppendEmpty()
+                logRecord.SetTimestamp(pcommon.NewTimestampFromTime(time.Now()))
+                logRecord.Body().SetStr(line)
+                logRecord.SetSeverityText(strings.ToUpper(target.LogLevel))
+                logRecord.SetSeverityNumber(r.getSeverityNumber(target.LogLevel))</span>
+        }
+
+        <span class="cov2" title="2">return logs, nil</span>
+}
+
+// addLogRecord adds a single log record to the scope logs.
+func (r *logsReceiver) addLogRecord(scopeLogs plog.ScopeLogs, data interface{}, target *targetConfig) <span class="cov4" title="3">{
+        logRecord := scopeLogs.LogRecords().AppendEmpty()
+        logRecord.SetTimestamp(pcommon.NewTimestampFromTime(time.Now()))
+
+        logRecord.SetSeverityText(strings.ToUpper(target.LogLevel))
+        logRecord.SetSeverityNumber(r.getSeverityNumber(target.LogLevel))
+
+        for key, labelVal := range target.Labels </span><span class="cov4" title="4">{
+                if val := r.extractValueByPath(labelVal, data); val != nil </span><span class="cov4" title="3">{
+                        logRecord.Attributes().PutStr(key, fmt.Sprintf("%v", val))
+                }</span> else<span class="cov1" title="1"> {
+                        logRecord.Attributes().PutStr(key, "NOT FOUND")
+                }</span>
+        }
+
+        <span class="cov4" title="3">r.setBodyValue(logRecord.Body(), data)</span>
+}
+
+// setBodyValue recursively populates a pcommon.Value from an interface{} decoded from JSON.
+func (r *logsReceiver) setBodyValue(dest pcommon.Value, v interface{}) <span class="cov10" title="27">{
+        switch val := v.(type) </span>{
+        case map[string]interface{}:<span class="cov6" title="8">
+                m := dest.SetEmptyMap()
+                for k, child := range val </span><span class="cov9" title="20">{
+                        cv := m.PutEmpty(k)
+                        r.setBodyValue(cv, child)
+                }</span>
+        case []interface{}:<span class="cov2" title="2">
+                s := dest.SetEmptySlice()
+                for _, elem := range val </span><span class="cov4" title="4">{
+                        cv := s.AppendEmpty()
+                        r.setBodyValue(cv, elem)
+                }</span>
+        case string:<span class="cov7" title="9">
+                dest.SetStr(val)</span>
+        case float64:<span class="cov6" title="8">
+                dest.SetDouble(val)</span>
+        case bool:<span class="cov0" title="0">
+                dest.SetBool(val)</span>
+        case nil:<span class="cov0" title="0">
+                // Represent null as empty map to keep type (alternatively could use a string "null").
+                dest.SetStr("null")</span>
+        default:<span class="cov0" title="0">
+                dest.SetStr(fmt.Sprintf("%v", val))</span>
+        }
+}
+
+func (r *logsReceiver) extractValueByPath(path string, raw interface{}) interface{} <span class="cov9" title="19">{
+        if raw == nil || path == "" </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov9" title="19">parts := strings.SplitN(path, ".", 2)
+        head := parts[0]
+        tail := ""
+        if len(parts) == 2 </span><span class="cov6" title="8">{
+                tail = parts[1]
+        }</span>
+
+        <span class="cov9" title="19">switch node := raw.(type) </span>{
+
+        case map[string]interface{}:<span class="cov8" title="14">
+                if child, ok := node[head]; ok </span><span class="cov8" title="13">{
+                        if tail == "" </span><span class="cov6" title="8">{
+                                return child
+                        }</span>
+
+                        <span class="cov5" title="5">return r.extractValueByPath(tail, child)</span>
+                }
+                <span class="cov1" title="1">return nil</span>
+
+        case []interface{}:<span class="cov5" title="5">
+                var results []interface{}
+                for _, el := range node </span><span class="cov7" title="9">{
+                        v := r.extractValueByPath(path, el)
+                        switch vv := v.(type) </span>{
+                        case nil:<span class="cov0" title="0"></span>
+                                // skip
+                        case []interface{}:<span class="cov2" title="2">
+                                results = append(results, vv...)</span>
+                        default:<span class="cov6" title="7">
+                                results = append(results, vv)</span>
+                        }
+                }
+                <span class="cov5" title="5">if len(results) == 0 </span><span class="cov0" title="0">{
+                        return nil
+                }</span>
+                <span class="cov5" title="5">return results</span>
+
+        default:<span class="cov0" title="0">
+                return nil</span>
+        }
+}
+
+// getSeverityNumber converts log level string to severity number.
+func (r *logsReceiver) getSeverityNumber(level string) plog.SeverityNumber <span class="cov8" title="16">{
+        switch strings.ToLower(level) </span>{
+        case "trace":<span class="cov1" title="1">
+                return plog.SeverityNumberTrace</span>
+        case "debug":<span class="cov2" title="2">
+                return plog.SeverityNumberDebug</span>
+        case "info":<span class="cov5" title="6">
+                return plog.SeverityNumberInfo</span>
+        case "warn", "warning":<span class="cov2" title="2">
+                return plog.SeverityNumberWarn</span>
+        case "error":<span class="cov1" title="1">
+                return plog.SeverityNumberError</span>
+        case "fatal":<span class="cov1" title="1">
+                return plog.SeverityNumberFatal</span>
+        default:<span class="cov4" title="3">
+                return plog.SeverityNumberInfo</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
