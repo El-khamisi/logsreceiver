@@ -38,9 +38,12 @@ receivers:
     targets:
       - endpoint: "https://jsonplaceholder.typicode.com/users"  
         method: "GET"
+        service_name: "scrap-users"
         log_level: "info"
         labels:
           companies: "company.name"
+          user_emails: "email"
+
           
       - endpoint: "https://example.com/audit"
         method: "POST"
