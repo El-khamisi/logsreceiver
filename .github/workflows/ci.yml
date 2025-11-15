@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        go-version: [1.24.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Install dependencies
+      run: make deps
+    
+    - name: Format check
+      run: |
+        make fmt
+        git diff --exit-code
+    
+    - name: Vet
+      run: make vet
+    
+    - name: Build
+      run: make build
+    
+    - name: Run tests with coverage
+      run: make test-coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Upload coverage to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+          token: ${{ secrets.CODECOV_TOKEN }}

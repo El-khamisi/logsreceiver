@@ -21,8 +21,8 @@ test:
 # Run tests with coverage
 .PHONY: test-coverage
 test-coverage:
-	$(GO) test -race -coverprofile=coverage.out ./...
-	$(GO) tool cover -html=coverage.out -o coverage.html
+	$(GO) test -race -coverprofile=coverage.txt ./...
+	$(GO) tool cover -html=coverage.txt -o coverage.html
 
 # Format code
 .PHONY: fmt
@@ -43,7 +43,7 @@ vet:
 .PHONY: clean
 clean:
 	$(GO) clean ./...
-	rm -f coverage.out coverage.html
+	rm -f coverage.txt coverage.html
 
 # Run all checks
 .PHONY: all
